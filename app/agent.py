@@ -43,6 +43,7 @@ class AIMarketAnalyst:
                 "prompt": self._get_qa_prompt()
             }
         )
+        print(f"\nQA CHAIN: {self.qa_chain}")
     
     def _get_qa_prompt(self):
         """Custom prompt for Q&A tasks"""
@@ -63,7 +64,16 @@ Answer:""",
         """Handle general Q&A about the market research"""
         try:
             print(f"\nQUESTION:\n{question}")
-            result = self.qa_chain({"query": question})
+            retrieved_docs = self.dp.vector_store.as_retriever(
+                search_type="similarity",
+                search_kwargs={"k": 3}
+            ).invoke(question)
+
+            print(f"\nRETRIEVED DOCS ({len(retrieved_docs)}):")
+            for i, doc in enumerate(retrieved_docs):
+                print(f"[DOC {i+1}]\n{doc.page_content[:300]}\n")
+
+            result = self.qa_chain.invoke({"query": question})
             print(f"\RESULT:\n{result}")
             return {
                 "answer": result["result"],
