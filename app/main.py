@@ -23,20 +23,22 @@ init_task = None
 @app.on_event("startup")
 async def startup_event():
     """Initialize the AI agent on startup"""
-    global init_task
-    loop = asyncio.get_running_loop()
-    init_task = loop.create_task(initialize_agent())
-
-async def initialize_agent():
-    """Background initialization of document processor and AI agent."""
     global analyst_agent
+    
+    # Initialize agent with Groq
     groq_api_key = os.getenv("GROQ_API_KEY")
     if not groq_api_key:
         raise ValueError("GROQ_API_KEY environment variable is required")
+    
+    # Do heavy initialization in executor
+    loop = asyncio.get_running_loop()
+    dp = await loop.run_in_executor(None, init_document_processor, groq_api_key)
+    
 
-    dp = await asyncio.to_thread(init_document_processor, groq_api_key)
-    analyst_agent = AIMarketAnalyst(document_processor=dp, groq_api_key=groq_api_key)
-    print("✅ Analyst agent initialized successfully.")
+    analyst_agent = AIMarketAnalyst(
+        document_processor=dp,
+        groq_api_key=groq_api_key
+    )
 
 def init_document_processor(groq_api_key):
     dp = DocumentProcessor()
