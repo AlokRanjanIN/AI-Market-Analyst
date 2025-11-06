@@ -114,8 +114,11 @@ async def autonomous_analysis(request: AutonomousRequest):
         if analyst_agent is None:
             raise HTTPException(status_code=503, detail="Agent not initialized")
         result = analyst_agent.autonomous_router(request.query)
+        print("DEBUG Autonomous Result:", result)  # 👈 ADD THIS LINE
         return AutonomousResponse(**result)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.get("/health")
