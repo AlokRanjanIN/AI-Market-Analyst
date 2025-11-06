@@ -18,34 +18,40 @@ app = FastAPI(title="AI Market Analyst - Groq", version="1.0.0")
 
 # Global agent instance
 analyst_agent = None
+init_task = None
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize the AI agent on startup"""
+    global init_task
+    loop = asyncio.get_running_loop()
+    init_task = loop.create_task(initialize_agent())
+
+async def initialize_agent():
+    """Background initialization of document processor and AI agent."""
     global analyst_agent
-    
-    # Initialize agent with Groq
     groq_api_key = os.getenv("GROQ_API_KEY")
     if not groq_api_key:
         raise ValueError("GROQ_API_KEY environment variable is required")
-    
-    # Do heavy initialization in executor
-    loop = asyncio.get_running_loop()
-    dp = await loop.run_in_executor(None, init_document_processor, groq_api_key)
-    
 
-    analyst_agent = AIMarketAnalyst(
-        document_processor=dp,
-        groq_api_key=groq_api_key
-    )
+    dp = await asyncio.to_thread(init_document_processor, groq_api_key)
+    analyst_agent = AIMarketAnalyst(document_processor=dp, groq_api_key=groq_api_key)
+    print("✅ Analyst agent initialized successfully.")
 
 def init_document_processor(groq_api_key):
     dp = DocumentProcessor()
     dp.load_embeddings()
-    if os.path.exists("./chroma_db"):
+    if dp.persist_directory.exists():
+        print(f"CHROMADB found at {dp.persist_dir}")
         dp.load_vector_store()
+        try:
+            collection = dp.vector_store._collection
+            print(f"Vector store documents count: {collection.count()}")
+        except Exception as e:
+            print(f"Error checking Chroma collection: {e}")
     else:
-        with open("data/market_research.txt", "r") as f:
+        print(f"CREATING VECTORSTORE")
+        with open("app/data/market_research.txt", "r") as f:
             document_text = f.read()
         documents = dp.chunk_document(document_text)
         dp.create_vector_store(documents)
