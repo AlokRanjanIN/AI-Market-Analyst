@@ -27,8 +27,8 @@ if task == "Autonomous Analysis":
                                        json={"query": query})
                 if response.status_code == 200:
                     result = response.json()
-                    st.success(f"Task Type: {result['task_type']}")
-                    st.info(f"Reasoning: {result['reasoning']}")
+                    st.success(f"Task Type: {result.get('task_type', 'N/A')}")
+                    st.info(f"Reasoning: {result.get('reasoning', 'N/A')}")
                     st.subheader("Response:")
                     st.write(result['response'])
                 else:
