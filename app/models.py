@@ -34,4 +34,6 @@ class AutonomousRequest(BaseModel):
 
 class AutonomousResponse(BaseModel):
     task_type: str
+    confidence: Optional[str] = None
+    reasoning: Optional[str] = None
     response: Any
