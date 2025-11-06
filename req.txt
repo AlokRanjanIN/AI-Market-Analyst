@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+langchain
+langchain-groq
+chromadb
+sentence-transformers
+pydantic
+python-multipart
+streamlit
+pytest
+numpy
+requests
