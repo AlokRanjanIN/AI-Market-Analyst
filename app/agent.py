@@ -1,12 +1,14 @@
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import BaseOutputParser
+from langchain_classic.chains import RetrievalQA
 import json
 import re
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from .document_processor import DocumentProcessor
 from .models import MarketData
 from .config import GroqConfig
+
 
 class AIMarketAnalyst:
     def __init__(self, document_processor: DocumentProcessor, groq_api_key: str = None):
@@ -41,7 +43,7 @@ class AIMarketAnalyst:
                 "prompt": self._get_qa_prompt()
             }
         )
-        
+    
     def _get_qa_prompt(self):
         """Custom prompt for Q&A tasks"""
         return PromptTemplate(
@@ -60,10 +62,14 @@ Answer:""",
     def general_qa(self, question: str) -> Dict[str, Any]:
         """Handle general Q&A about the market research"""
         try:
+            print(f"\nQUESTION:\n{question}")
             result = self.qa_chain({"query": question})
+            print(f"\RESULT:\n{result}")
             return {
                 "answer": result["result"],
-                "sources": [doc.page_content for doc in result["source_documents"]]
+                # "sources": [doc.page_content for doc in result["source_documents"]]
+                "sources": [doc.page_content[:500] + "..." if len(doc.page_content) > 500 else doc.page_content 
+                           for doc in result.get("source_documents", [])]
             }
         except Exception as e:
             return {
@@ -71,7 +77,7 @@ Answer:""",
                 "sources": []
             }
     
-    def market_research_summary(self, focus_areas: list = None) -> Dict[str, Any]:
+    def market_research_summary(self, focus_areas: List = None) -> Dict[str, Any]:
         """Generate comprehensive market research summary using high-quality model"""
         base_prompt = """
         As a senior market research analyst, provide a comprehensive executive summary based on the provided market research document.
@@ -101,18 +107,22 @@ Answer:""",
             context_parts.extend([doc.page_content for doc in docs])
         
         context = "\n\n".join(context_parts[:8])  # Limit context length
+        print(f"CONTEXT: \n{context}")
         
         prompt = base_prompt.format(context=context)
-        
+        print(f"PROMPT: \n{prompt}")
         try:
-            response = self.llm_high_quality.predict(prompt)
+            response = self.llm_high_quality.invoke(prompt)
+            print(f"\nRESPONSE: \n{response}")
+            response_text = response.content if hasattr(response, 'content') else str(response)
+            print(f"\nRESPONSE TEXT: \n{response_text}")
             
             # Extract structured findings
             findings_prompt = f"""
             Extract the key findings and recommendations from this market research summary and format them as JSON.
             
             SUMMARY CONTENT:
-            {response}
+            {response_text}
             
             Return a JSON object with exactly these fields:
             - "summary": The full comprehensive summary text
@@ -122,9 +132,12 @@ Answer:""",
             JSON:
             """
             
-            structured_response = self.llm_fast.predict(findings_prompt)
-            
-            return self._parse_structured_response(structured_response, response)
+            structured_response = self.llm_fast.invoke(findings_prompt)
+            print(f"\nSTRUCTURED RESPONSE: \n{structured_response}")
+            structured_text = structured_response.content if hasattr(structured_response, 'content') else str(structured_response)
+            print(f"\nSTRUCTURED TEXT: \n{structured_text}")
+
+            return self._parse_structured_response(structured_text, response_text)
             
         except Exception as e:
             return {
@@ -133,7 +146,7 @@ Answer:""",
                 "recommendations": []
             }
     
-    def structured_data_extraction(self, entities: list = None) -> Dict[str, Any]:
+    def structured_data_extraction(self, entities: List[str] = None) -> Dict[str, Any]:
         """Extract structured data from the research document using high-quality model"""
         
         extraction_prompt = """
@@ -182,8 +195,9 @@ Answer:""",
         prompt = extraction_prompt.format(context=context)
         
         try:
-            response = self.llm_high_quality.predict(prompt)
-            return self._parse_extraction_response(response)
+            response = self.llm_high_quality.invoke(prompt)
+            response_text = response.content if hasattr(response, 'content') else str(response)
+            return self._parse_extraction_response(response_text)
             
         except Exception as e:
             return self._fallback_extraction(context)
@@ -301,8 +315,9 @@ Answer:""",
         """
         
         try:
-            routing_result = self.llm_fast.predict(routing_prompt)
-            route = json.loads(routing_result)
+            routing_result = self.llm_fast.invoke(routing_prompt)
+            routing_text = routing_result.content if hasattr(routing_result, 'content') else str(routing_result)
+            route = json.loads(routing_text)
             task_type = route["task"]
             
             if task_type == "qa":
