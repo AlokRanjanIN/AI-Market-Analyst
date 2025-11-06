@@ -125,3 +125,5 @@ st.sidebar.info(
     "This AI Market Analyst can process market research documents and provide "
     "insights through Q&A, summaries, and structured data extraction."
 )
+
+# streamlit run ui/streamlit_app.py
