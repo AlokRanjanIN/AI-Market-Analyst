@@ -1,7 +1,7 @@
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import Chroma
-from langchain.schema import Document
+from langchain_chroma import Chroma
+from langchain_core.documents import Document
 import os
 
 class DocumentProcessor:
