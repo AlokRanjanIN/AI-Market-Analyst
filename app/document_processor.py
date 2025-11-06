@@ -3,10 +3,12 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 import os
+from pathlib import Path
 
 class DocumentProcessor:
-    def __init__(self, persist_directory: str = "./chroma_db"):
-        self.persist_directory = persist_directory
+    def __init__(self):
+        self.base_dir = Path(__file__).resolve().parent.parent
+        self.persist_directory = self.base_dir / "chroma_db"
         self.vector_store = None
         self.embeddings = None
         
@@ -36,15 +38,14 @@ class DocumentProcessor:
         self.vector_store = Chroma.from_documents(
             documents=documents,
             embedding=self.embeddings,
-            persist_directory=self.persist_directory
+            persist_directory=str(self.persist_directory)
         )
-        self.vector_store.persist()
         return self.vector_store
     
     def load_vector_store(self):
         """Load existing vector store"""
         self.vector_store = Chroma(
-            persist_directory=self.persist_directory,
+            persist_directory=str(self.persist_directory),
             embedding_function=self.embeddings
         )
         return self.vector_store
