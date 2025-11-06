@@ -1,6 +1,6 @@
 from langchain_groq import ChatGroq
-from langchain.prompts import PromptTemplate
-from langchain.schema import BaseOutputParser
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import BaseOutputParser
 import json
 import re
 from typing import Dict, Any
