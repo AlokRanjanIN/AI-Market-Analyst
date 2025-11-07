@@ -94,19 +94,36 @@ elif task == "Data Extraction":
                 response = requests.post(f"{API_BASE}/extract")
                 if response.status_code == 200:
                     result = response.json()
+                    data = result['extracted_data']
                     
                     col1, col2 = st.columns(2)
                     
                     with col1:
-                        st.subheader("Market Overview")
-                        data = result['extracted_data']
-                        st.metric("Market Size", data.get('market_size', 'N/A'))
-                        st.metric("Growth Rate", data.get('growth_rate', 'N/A'))
+                        # st.subheader("Market Overview")
+                        # data = result['extracted_data']
+                        # st.metric("Market Size", data.get('market_size', 'N/A'))
+                        # st.metric("Growth Rate", data.get('growth_rate', 'N/A'))
                         
+                        # st.subheader("Market Share")
+                        # for company, share in data.get('market_share', {}).items():
+                        #     st.write(f"**{company}**: {share}")
+                        st.subheader("Market Overview")
+
+                        market_size = data.get('market_size', {})
+                        growth_rate = data.get('growth_rate', 'N/A')
+
+                        # Safely extract current/projected values
+                        current_size = market_size.get('current', 'N/A')
+                        projected_size = market_size.get('projected_2030', 'N/A')
+
+                        st.metric("Current Market Size", current_size)
+                        st.metric("Projected Market Size (2030)", projected_size)
+                        st.metric("Growth Rate (CAGR)", growth_rate)
+
                         st.subheader("Market Share")
                         for company, share in data.get('market_share', {}).items():
                             st.write(f"**{company}**: {share}")
-                    
+
                     with col2:
                         st.subheader("SWOT Analysis")
                         swot = data.get('swot_analysis', {})
