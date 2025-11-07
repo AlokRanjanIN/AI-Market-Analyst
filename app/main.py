@@ -1,5 +1,3 @@
-# uvicorn app.main:app --reload --port 8000
-
 from fastapi import FastAPI, HTTPException
 from .models import (
     QARequest, QAResponse, ResearchSummaryRequest, 
@@ -44,15 +42,8 @@ def init_document_processor(groq_api_key):
     dp = DocumentProcessor()
     dp.load_embeddings()
     if dp.persist_directory.exists():
-        # print(f"CHROMADB found at {dp.persist_directory}")
         dp.load_vector_store()
-        # try:
-        #     collection = dp.vector_store._collection
-        #     print(f"Vector store documents count: {collection.count()}")
-        # except Exception as e:
-        #     print(f"Error checking Chroma collection: {e}")
     else:
-        # print(f"CREATING VECTORSTORE")
         with open("app/data/market_research.txt", "r") as f:
             document_text = f.read()
         documents = dp.chunk_document(document_text)
