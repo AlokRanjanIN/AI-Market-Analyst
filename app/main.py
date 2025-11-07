@@ -44,15 +44,15 @@ def init_document_processor(groq_api_key):
     dp = DocumentProcessor()
     dp.load_embeddings()
     if dp.persist_directory.exists():
-        print(f"CHROMADB found at {dp.persist_dir}")
+        # print(f"CHROMADB found at {dp.persist_directory}")
         dp.load_vector_store()
-        try:
-            collection = dp.vector_store._collection
-            print(f"Vector store documents count: {collection.count()}")
-        except Exception as e:
-            print(f"Error checking Chroma collection: {e}")
+        # try:
+        #     collection = dp.vector_store._collection
+        #     print(f"Vector store documents count: {collection.count()}")
+        # except Exception as e:
+        #     print(f"Error checking Chroma collection: {e}")
     else:
-        print(f"CREATING VECTORSTORE")
+        # print(f"CREATING VECTORSTORE")
         with open("app/data/market_research.txt", "r") as f:
             document_text = f.read()
         documents = dp.chunk_document(document_text)
@@ -90,9 +90,9 @@ async def research_summary(request: ResearchSummaryRequest = None):
         if analyst_agent is None:
             raise HTTPException(status_code=503, detail="Agent not initialized")
         focus_areas = request.focus_areas if request else None
-        print(f"focus_areas: {focus_areas}")
+        # print(f"focus_areas: {focus_areas}")
         result = analyst_agent.market_research_summary(focus_areas)
-        print(f"result: {result}")
+        # print(f"result: {result}")
         return ResearchSummaryResponse(**result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -116,11 +116,11 @@ async def autonomous_analysis(request: AutonomousRequest):
         if analyst_agent is None:
             raise HTTPException(status_code=503, detail="Agent not initialized")
         result = analyst_agent.autonomous_router(request.query)
-        print("DEBUG Autonomous Result:", result)  # 👈 ADD THIS LINE
+        # print("DEBUG Autonomous Result:", result)
         return AutonomousResponse(**result)
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        # import traceback
+        # traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.get("/health")
