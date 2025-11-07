@@ -1,9 +1,11 @@
 fastapi
 uvicorn
-langchain
+langchain_core
+langchain_classic
+langchain_text_splitters
+langchain_huggingface
+langchain_chroma
 langchain-groq
-chromadb
-sentence-transformers
 pydantic
 python-multipart
 streamlit
