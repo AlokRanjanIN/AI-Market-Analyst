@@ -9,7 +9,8 @@ __pycache__/
 # venv
 *venv*
 
-# DB
+# data
+data
 chroma_db
 
 #.ipynb
