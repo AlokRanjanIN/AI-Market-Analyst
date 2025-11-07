@@ -43,7 +43,7 @@ class AIMarketAnalyst:
                 "prompt": self._get_qa_prompt()
             }
         )
-        print(f"\nQA CHAIN: {self.qa_chain}")
+        # print(f"\nQA CHAIN: {self.qa_chain}")
     
     def _get_qa_prompt(self):
         """Custom prompt for Q&A tasks"""
@@ -63,18 +63,18 @@ Answer:""",
     def general_qa(self, question: str) -> Dict[str, Any]:
         """Handle general Q&A about the market research"""
         try:
-            print(f"\nQUESTION:\n{question}")
-            retrieved_docs = self.dp.vector_store.as_retriever(
-                search_type="similarity",
-                search_kwargs={"k": 3}
-            ).invoke(question)
+            # print(f"\nQUESTION:\n{question}")
+            # retrieved_docs = self.dp.vector_store.as_retriever(
+            #     search_type="similarity",
+            #     search_kwargs={"k": 3}
+            # ).invoke(question)
 
-            print(f"\nRETRIEVED DOCS ({len(retrieved_docs)}):")
-            for i, doc in enumerate(retrieved_docs):
-                print(f"[DOC {i+1}]\n{doc.page_content[:300]}\n")
+            # print(f"\nRETRIEVED DOCS ({len(retrieved_docs)}):")
+            # for i, doc in enumerate(retrieved_docs):
+            #     print(f"[DOC {i+1}]\n{doc.page_content[:300]}\n")
 
             result = self.qa_chain.invoke({"query": question})
-            print(f"\RESULT:\n{result}")
+            # print(f"\RESULT:\n{result}")
             return {
                 "answer": result["result"],
                 # "sources": [doc.page_content for doc in result["source_documents"]]
@@ -117,15 +117,15 @@ Answer:""",
             context_parts.extend([doc.page_content for doc in docs])
         
         context = "\n\n".join(context_parts[:8])  # Limit context length
-        print(f"CONTEXT: \n{context}")
+        # print(f"CONTEXT: \n{context}")
         
         prompt = base_prompt.format(context=context)
-        print(f"PROMPT: \n{prompt}")
+        # print(f"PROMPT: \n{prompt}")
         try:
             response = self.llm_high_quality.invoke(prompt)
-            print(f"\nRESPONSE: \n{response}")
+            # print(f"\nRESPONSE: \n{response}")
             response_text = response.content if hasattr(response, 'content') else str(response)
-            print(f"\nRESPONSE TEXT: \n{response_text}")
+            # print(f"\nRESPONSE TEXT: \n{response_text}")
             
             # Extract structured findings
             findings_prompt = f"""
@@ -143,9 +143,9 @@ Answer:""",
             """
             
             structured_response = self.llm_fast.invoke(findings_prompt)
-            print(f"\nSTRUCTURED RESPONSE: \n{structured_response}")
+            # print(f"\nSTRUCTURED RESPONSE: \n{structured_response}")
             structured_text = structured_response.content if hasattr(structured_response, 'content') else str(structured_response)
-            print(f"\nSTRUCTURED TEXT: \n{structured_text}")
+            # print(f"\nSTRUCTURED TEXT: \n{structured_text}")
 
             return self._parse_structured_response(structured_text, response_text)
             
@@ -207,7 +207,17 @@ Answer:""",
         try:
             response = self.llm_high_quality.invoke(prompt)
             response_text = response.content if hasattr(response, 'content') else str(response)
-            return self._parse_extraction_response(response_text)
+            data = self._parse_extraction_response(response_text)
+            # print(f"\nDATA: \n{data}")
+            # Flatten for UI consumption
+            if isinstance(data.get("market_size"), dict):
+                ms = data["market_size"]
+                data["market_size_current"] = ms.get("current")
+                data["market_size_projected_2030"] = ms.get("projected_2030")
+
+            return data
+
+            # return self._parse_extraction_response(response_text)
             
         except Exception as e:
             return self._fallback_extraction(context)
